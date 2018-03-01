@@ -64,9 +64,10 @@ def choose_ride(car, pos, rides, step):
     for current_index, ride in enumerate(rides):
         if ride.max_start < step:
             continue
-
+        
         time_to_ride = distance(pos, (ride.start_x, ride.start_y))
         start_time = step + time_to_ride
+
         if start_time <= ride.max_start:
             future_step = step + time_to_ride + distance(
                 (ride.start_x, ride.start_y), (ride.end_x, ride.end_y)
@@ -76,12 +77,13 @@ def choose_ride(car, pos, rides, step):
 
             index = current_index
             break
-    if index:
+
+    if index is not None:
         ride = rides[index]
-        del rides[index]
+        rides = rides[:index] + rides[index+1:]
         return ride, future_step, rides
 
-    return None, None
+    return None, None, rides
 
 
 def solve(problem):
@@ -96,7 +98,7 @@ def solve(problem):
     cars = [Car() for _ in range(problem.n_vehicules)]
 
     n_car_running = problem.n_vehicules
-    while n_car_running:
+    while n_car_running > 0:
         for car in cars:
             if car.done:
                 continue
@@ -107,7 +109,7 @@ def solve(problem):
 
             current_pos = (car.rides[-1].end_x, car.rides[-1].end_y) if car.rides else (0, 0)
 
-            best_ride, future_step = ride_selection_strategy(
+            best_ride, future_step, rides = ride_selection_strategy(
                 car, current_pos, rides, car.step
             )
 
@@ -122,11 +124,14 @@ def solve(problem):
 
 
 def main():
-    problem = read_file('data/a_example.in')
+    problem = read_file('data/e_high_bonus.in')
     cars = solve(problem)
     for car in cars:
-        print(len(car.rides))
-        print([r.id for r in car.rides]) 
+        output = "{} {}".format(
+            len(car.rides),
+            ' '.join(map(str, [r.id for r in car.rides]))
+        )
+        print(output)
 
 
 if __name__ == "__main__":
