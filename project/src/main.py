@@ -10,8 +10,9 @@ Problem = namedtuple(
 
 class Ride:
     def __init__(
-            self, start_x, start_y, end_x, end_y,  min_start, max_arrival):
+            self, id_, start_x, start_y, end_x, end_y,  min_start, max_arrival):
 
+        self.id = id_
         self.start_x=start_x
         self.start_y=start_y
         self.end_x=end_x
@@ -32,10 +33,11 @@ def read_file(path):
     with open(path) as data_file:
         r, c, v, t, b, s = map(int, data_file.readline().split())
         rides = []
-        for line in data_file.readlines():
+        for id_, line in enumerate(data_file.readlines()):
             sx, sy, ex, ey, min_s, max_e = map(int, line.rstrip().split())
             rides.append(
                 Ride(
+                    id_=id_,
                     start_x=sx, start_y=sy,
                     end_x=ex, end_y=ey,
                     min_start=min_s,
@@ -50,9 +52,7 @@ def read_file(path):
 
 
 def distance(u, v):
-    print(type(u))
-    print(type(v))
-    return abs(v[0] - u[0]) + abs(v[0] - u[0])
+    return abs(v[0] - v[1]) + abs(u[0] - u[1])
 
 
 def sort_rides(ride):
@@ -60,17 +60,28 @@ def sort_rides(ride):
 
 
 def choose_ride(car, pos, rides, step):
-    for ride in rides:
+    index = None
+    for current_index, ride in enumerate(rides):
         if ride.max_start < step:
             continue
 
-        time_to_ride = distance(pos, (ride.start_x, ride.start_y)
+        time_to_ride = distance(pos, (ride.start_x, ride.start_y))
         start_time = step + time_to_ride
         if start_time <= ride.max_start:
-            
-            return ride
+            future_step = step + time_to_ride + distance(
+                (ride.start_x, ride.start_y), (ride.end_x, ride.end_y)
+            )
+            if start_time < ride.min_start:
+                future_step += ride.min_start - start_time
 
-    return None
+            index = current_index
+            break
+    if index:
+        ride = rides[index]
+        del rides[index]
+        return ride, future_step, rides
+
+    return None, None
 
 
 def solve(problem):
@@ -96,22 +107,26 @@ def solve(problem):
 
             current_pos = (car.rides[-1].end_x, car.rides[-1].end_y) if car.rides else (0, 0)
 
-            best_ride = ride_selection_strategy(
+            best_ride, future_step = ride_selection_strategy(
                 car, current_pos, rides, car.step
             )
 
             if not best_ride:
                 car.done = True
+                n_car_running -= 1
+            else:
+                car.rides.append(best_ride)
+                car.step = future_step
 
-            car.rides.append(best_ride)
-
-            time = 
-            car.step += distance((best_ride.), current_pos)
+    return cars
 
 
 def main():
     problem = read_file('data/a_example.in')
-    solve(problem)
+    cars = solve(problem)
+    for car in cars:
+        print(len(car.rides))
+        print([r.id for r in car.rides]) 
 
 
 if __name__ == "__main__":
