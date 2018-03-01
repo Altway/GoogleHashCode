@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from collections import namedtuple
 
-
 Problem = namedtuple(
     'Problem',
     'rows cols n_vehicules n_rides bonus n_step rides'
@@ -27,6 +26,11 @@ class Car:
         self.rides = []
         self.step = 0
         self.done = False
+
+
+def supervisor(problem, divider, cars):
+    map_size = problem.rows * problem.cols
+    
 
 
 def read_file(path):
@@ -59,13 +63,18 @@ def sort_rides(ride):
     return ride.max_start
 
 
-def choose_ride(car, pos, rides, step):
+def choose_ride(car, pos, rides, step, problem):
     index = None
+    divider = problem.rows * problem.cols / 10
     for current_index, ride in enumerate(rides):
+        
         if ride.max_start < step:
             continue
         
         time_to_ride = distance(pos, (ride.start_x, ride.start_y))
+        if time_to_ride > divider:
+            divider+=1
+            continue
         start_time = step + time_to_ride
 
         if start_time <= ride.max_start:
@@ -110,7 +119,7 @@ def solve(problem):
             current_pos = (car.rides[-1].end_x, car.rides[-1].end_y) if car.rides else (0, 0)
 
             best_ride, future_step, rides = ride_selection_strategy(
-                car, current_pos, rides, car.step
+                car, current_pos, rides, car.step, problem
             )
 
             if not best_ride:
